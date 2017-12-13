@@ -43,7 +43,8 @@ define $(PKG)_BUILD
             -static \
             -prefix '$(PREFIX)/$(TARGET)/qt5' \
             -no-icu \
-            -opengl desktop \
+            -opengl dynamic \
+            -angle \
             -no-glib \
             -accessibility \
             -nomake examples \
