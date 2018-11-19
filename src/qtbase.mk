@@ -4,12 +4,12 @@ PKG             := qtbase
 $(PKG)_WEBSITE  := https://www.qt.io/
 $(PKG)_DESCR    := Qt
 $(PKG)_IGNORE   :=
-$(PKG)_VERSION  := 5.11.1
-$(PKG)_CHECKSUM := a0d047b2da5782c8332c59ae203984b64e4d5dc5f4ba9c0884fdbe753d0afb46
-$(PKG)_SUBDIR   := $(PKG)-everywhere-src-$($(PKG)_VERSION)
-$(PKG)_FILE     := $(PKG)-everywhere-src-$($(PKG)_VERSION).tar.xz
-$(PKG)_URL      := https://download.qt.io/official_releases/qt/5.11/$($(PKG)_VERSION)/submodules/$($(PKG)_FILE)
-$(PKG)_DEPS     := cc dbus fontconfig freetds freetype harfbuzz jpeg libmysqlclient libpng openssl pcre2 postgresql sqlite zlib
+$(PKG)_VERSION  := 5.6.2
+$(PKG)_CHECKSUM := 2f6eae93c5d982fe0a387a01aeb3435571433e23e9d9d9246741faf51f1ee787
+$(PKG)_SUBDIR   := $(PKG)-opensource-src-$($(PKG)_VERSION)
+$(PKG)_FILE     := $(PKG)-opensource-src-$($(PKG)_VERSION).tar.xz
+$(PKG)_URL      := https://download.qt.io/official_releases/qt/5.6/$($(PKG)_VERSION)/submodules/$($(PKG)_FILE)
+$(PKG)_DEPS     := cc dbus fontconfig freetype harfbuzz jpeg openssl libpng pcre2 sqlite zlib
 
 define $(PKG)_UPDATE
     $(WGET) -q -O- https://download.qt.io/official_releases/qt/5.8/ | \
@@ -23,13 +23,12 @@ define $(PKG)_BUILD
     # ICU is buggy. See #653. TODO: reenable it some time in the future.
     cd '$(1)' && \
         OPENSSL_LIBS="`'$(TARGET)-pkg-config' --libs-only-l openssl`" \
-        PSQL_LIBS="-lpq -lsecur32 `'$(TARGET)-pkg-config' --libs-only-l openssl pthreads` -lws2_32" \
-        SYBASE_LIBS="-lsybdb `'$(TARGET)-pkg-config' --libs-only-l gnutls` -liconv -lws2_32" \
         PKG_CONFIG="${TARGET}-pkg-config" \
         PKG_CONFIG_SYSROOT_DIR="/" \
         PKG_CONFIG_LIBDIR="$(PREFIX)/$(TARGET)/lib/pkgconfig" \
         ./configure \
             -opensource \
+            -c++std c++11 \
             -confirm-license \
             -xplatform win32-g++ \
             -device-option CROSS_COMPILE=${TARGET}- \
@@ -46,12 +45,8 @@ define $(PKG)_BUILD
             -accessibility \
             -nomake examples \
             -nomake tests \
-            -plugin-sql-mysql \
-            -mysql_config $(PREFIX)/$(TARGET)/bin/mysql_config \
             -plugin-sql-sqlite \
             -plugin-sql-odbc \
-            -plugin-sql-psql \
-            -plugin-sql-tds -D Q_USE_SYBASE \
             -system-zlib \
             -system-libpng \
             -system-libjpeg \
@@ -62,18 +57,17 @@ define $(PKG)_BUILD
             -system-pcre \
             -openssl-linked \
             -dbus-linked \
-            -no-pch \
             -v \
             $($(PKG)_CONFIGURE_OPTS)
 
-    $(MAKE) -C '$(1)' -j '$(JOBS)'
+    $(MAKE) -C '$(1)' -j '$(JOBS)' QMAKE="$(1)/bin/qmake CONFIG-='debug debug_and_release'"
     rm -rf '$(PREFIX)/$(TARGET)/qt5'
     $(MAKE) -C '$(1)' -j 1 install
     ln -sf '$(PREFIX)/$(TARGET)/qt5/bin/qmake' '$(PREFIX)/bin/$(TARGET)'-qmake-qt5
 
     mkdir            '$(1)/test-qt'
     cd               '$(1)/test-qt' && '$(PREFIX)/$(TARGET)/qt5/bin/qmake' '$(PWD)/src/qt-test.pro'
-    $(MAKE)       -C '$(1)/test-qt' -j '$(JOBS)' $(BUILD_TYPE)
+    $(MAKE)       -C '$(1)/test-qt' -j '$(JOBS)'
     $(INSTALL) -m755 '$(1)/test-qt/$(BUILD_TYPE)/test-qt5.exe' '$(PREFIX)/$(TARGET)/bin/'
 
     # build test the manual way
@@ -91,7 +85,7 @@ define $(PKG)_BUILD
         '$(1)/test-$(PKG)-pkgconfig/qrc_qt-test.cpp' \
         -o '$(PREFIX)/$(TARGET)/bin/test-$(PKG)-pkgconfig.exe' \
         -I'$(1)/test-$(PKG)-pkgconfig' \
-        `'$(TARGET)-pkg-config' Qt5Widgets$(BUILD_TYPE_SUFFIX) --cflags --libs`
+        `'$(TARGET)-pkg-config' Qt5Widgets --cflags --libs`
 
     # setup cmake toolchain
     echo 'set(CMAKE_SYSTEM_PREFIX_PATH "$(PREFIX)/$(TARGET)/qt5" ${CMAKE_SYSTEM_PREFIX_PATH})' > '$(CMAKE_TOOLCHAIN_DIR)/$(PKG).cmake'
