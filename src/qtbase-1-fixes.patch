@@ -144,27 +144,6 @@ index f457f69f11..2b2aec0868 100644
 -- 
 2.20.1
 
-From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
-From: Mark Brand <mabrand@mabrand.nl>
-Date: Sun, 29 Jan 2017 16:22:03 +0100
-Subject: [PATCH 4/8] fix treatment of SYBASE_LIBS
-
-Change-Id: I4c9914cf7ef9d91feb0718a57f2551c1eeed47e0
-
-diff --git a/src/plugins/sqldrivers/configure.pri b/src/plugins/sqldrivers/configure.pri
-index b69b51b6..d37423ad 100644
---- a/src/plugins/sqldrivers/configure.pri
-+++ b/src/plugins/sqldrivers/configure.pri
-@@ -92,7 +92,7 @@ defineTest(qtConfLibrary_sybaseEnv) {
-         libs += "-L$${sybase}/lib"
-     libs += $$getenv(SYBASE_LIBS)
-     !isEmpty(libs) {
--        $${1}.libs = "$$val_escape(libs)"
-+        $${1}.libs = $$libs
-         export($${1}.libs)
-     }
-     return(true)
-
 From a2eab53930f2891a15cd1aa1721a5e247851035c Mon Sep 17 00:00:00 2001
 From: Mark Brand <mabrand@mabrand.nl>
 Date: Sun, 11 Jun 2017 00:27:41 +0200
@@ -193,30 +172,12 @@ index 69f00bc71d..7d15695499 100644
 From 25e2683c3f2ecc5143211a9c80a0f0f8b72b6bd5 Mon Sep 17 00:00:00 2001
 From: Mark Brand <mabrand@mabrand.nl>
 Date: Sat, 7 Oct 2017 11:39:29 +0200
-Subject: [PATCH 6/8] Revert "qmake: don't limit command line length when not
- actually on windows"
+Subject: [PATCH 6/8] Revert "qmake: don't limit command line length when not actually on windows"
 
 This breaks cross compiling for mingw.
 
 This reverts commit 8bebded9ab02b8eec67c44bfddf802d6bf9cda3c.
 
-diff --git a/mkspecs/win32-g++/qmake.conf b/mkspecs/win32-g++/qmake.conf
-index 884286ea..780e5512 100644
---- a/mkspecs/win32-g++/qmake.conf
-+++ b/mkspecs/win32-g++/qmake.conf
-@@ -52,10 +52,8 @@ QMAKE_LFLAGS_CONSOLE    = -Wl,-subsystem,console
- QMAKE_LFLAGS_WINDOWS    = -Wl,-subsystem,windows
- QMAKE_LFLAGS_DLL        = -shared
- QMAKE_LFLAGS_GCSECTIONS = -Wl,--gc-sections
--equals(QMAKE_HOST.os, Windows) {
--    QMAKE_LINK_OBJECT_MAX = 10
--    QMAKE_LINK_OBJECT_SCRIPT = object_script
--}
-+QMAKE_LINK_OBJECT_MAX   = 10
-+QMAKE_LINK_OBJECT_SCRIPT = object_script
- QMAKE_PREFIX_SHLIB      =
- QMAKE_EXTENSION_SHLIB   = dll
- QMAKE_PREFIX_STATICLIB  = lib
 diff --git a/qmake/generators/win32/mingw_make.cpp b/qmake/generators/win32/mingw_make.cpp
 index 792ffb19..33002326 100644
 --- a/qmake/generators/win32/mingw_make.cpp
@@ -278,15 +239,10 @@ diff --git a/mkspecs/features/qt_module.prf b/mkspecs/features/qt_module.prf
 index d5e24ac1..99f6ec2b 100644
 --- a/mkspecs/features/qt_module.prf
 +++ b/mkspecs/features/qt_module.prf
-@@ -278,7 +278,7 @@ TARGET = $$qt5LibraryTarget($$TARGET$$QT_LIBINFIX)
-     else: \
-         QMAKE_PKGCONFIG_LIBDIR = $$[QT_INSTALL_LIBS/raw]
-     QMAKE_PKGCONFIG_INCDIR = $$[QT_INSTALL_HEADERS/raw]
--    QMAKE_PKGCONFIG_CFLAGS = -I${includedir}/$$MODULE_INCNAME
-+    QMAKE_PKGCONFIG_CFLAGS = -I${includedir}/$$MODULE_INCNAME -I${includedir}/QtANGLE
-     QMAKE_PKGCONFIG_NAME = $$replace(TARGET, ^Qt$$QT_MAJOR_VERSION, "Qt$$QT_MAJOR_VERSION ")
-     QMAKE_PKGCONFIG_FILE = $$TARGET
-     for(i, MODULE_DEPENDS): \
+@@ -283,2 +283,3 @@ TARGET = $$qt5LibraryTarget($$TARGET$$QT
+         QMAKE_PKGCONFIG_CFLAGS = -D$$MODULE_DEFINE -I${includedir}/$$MODULE_INCNAME
++        QMAKE_PKGCONFIG_CFLAGS = -I${includedir}/$$MODULE_INCNAME -I${includedir}/QtANGLE
+     }
 diff --git a/src/3rdparty/angle/src/compiler/translator/glslang.l b/src/3rdparty/angle/src/compiler/translator/glslang.l
 index d09358dd..258d5403 100644
 --- a/src/3rdparty/angle/src/compiler/translator/glslang.l
@@ -301,41 +257,21 @@ index d09358dd..258d5403 100644
 +
  int int_constant(TParseContext *context) {
      struct yyguts_t* yyg = (struct yyguts_t*) context->getScanner();
- 
-diff --git a/src/3rdparty/angle/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp b/src/3rdparty/angle/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp
-index 0173311b..a0274219 100644
---- a/src/3rdparty/angle/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp
-+++ b/src/3rdparty/angle/src/libANGLE/renderer/d3d/d3d11/Renderer11.cpp
-@@ -11,7 +11,7 @@
- #include <EGL/eglext.h>
- #include <sstream>
- #if !defined(ANGLE_MINGW32_COMPAT) && WINAPI_FAMILY != WINAPI_FAMILY_PHONE_APP
--#include <VersionHelpers.h>
-+#include <versionhelpers.h>
- #endif
- 
- #include "common/tls.h"
+
 diff --git a/src/angle/src/common/common.pri b/src/angle/src/common/common.pri
 index c1fad149..67dc4008 100644
 --- a/src/angle/src/common/common.pri
 +++ b/src/angle/src/common/common.pri
-@@ -21,10 +21,14 @@ lib_replace.replace = \$\$\$\$[QT_INSTALL_LIBS]
- lib_replace.CONFIG = path
- QMAKE_PRL_INSTALL_REPLACE += lib_replace
+@@ -24,3 +24,8 @@ QMAKE_PRL_INSTALL_REPLACE += lib_replace
  
--# DirectX is included in the Windows 8 Kit, but everything else requires the DX SDK.
--winrt|msvc {
+-FXC = $$shell_quote($$shell_path($$QMAKE_FXC_LOCATION))
 +!equals(QMAKE_HOST.os, Windows) {
 +    # If doing crosscompile, we expect shader header files already compiled by some other way
 +    FXC = echo
-+} else:winrt|msvc {
-+    # DirectX is included in the Windows 8 Kit
-     FXC = fxc.exe
- } else {
-+    # Everything else requires the DX SDK.
-     DX_DIR = $$(DXSDK_DIR)
-     isEmpty(DX_DIR) {
-         error("Cannot determine DirectX SDK location. Please set DXSDK_DIR environment variable.")
++} else {
++    FXC = $$shell_quote($$shell_path($$QMAKE_FXC_LOCATION))
++}
+
 diff --git a/src/angle/src/compiler/translator.pro b/src/angle/src/compiler/translator.pro
 index 398b9230..d0c04384 100644
 --- a/src/angle/src/compiler/translator.pro
