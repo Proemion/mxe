@@ -6,10 +6,7 @@ $(PKG)_DESCR    := Qt
 $(PKG)_IGNORE   :=
 $(PKG)_VERSION   = $(qtbase_VERSION)
 $(PKG)_CHECKSUM := 831913488bb887993ae8701e5966f53875667a774c0230fc5dc39d6077828c7f
-<<<<<<< HEAD:src/qtdeclarative-render2d.mk
-=======
 $(PKG)_PATCHES  := $(realpath $(sort $(wildcard $(dir $(lastword $(MAKEFILE_LIST)))/$(PKG)-[0-9]*.patch)))
->>>>>>> master:plugins/examples/qt5-freeze/qtdeclarative-render2d.mk
 $(PKG)_SUBDIR    = $(subst qtbase,qtdeclarative-render2d,$(qtbase_SUBDIR))
 $(PKG)_FILE      = $(subst qtbase,qtdeclarative-render2d,$(qtbase_FILE))
 $(PKG)_URL       = $(subst qtbase,qtdeclarative-render2d,$(qtbase_URL))
