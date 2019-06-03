@@ -18,4 +18,5 @@ define $(PKG)_BUILD
     cd '$(1)' && \
     MINGW_PREFIX='$(TARGET)-' scons platform=windows toolchain=crossmingw machine='$(MACHINE_ARCHITECTURE)' verbose=1 build=release libgl-gdi
     $(INSTALL) -m 755 '$(1)/build/windows-'$(MACHINE_ARCHITECTURE)'/gallium/targets/libgl-gdi/opengl32.dll' '$(PREFIX)/$(TARGET)/bin/'
+    mv '$(PREFIX)/$(TARGET)/bin/opengl32.dll'  '$(PREFIX)/$(TARGET)/bin/opengl32sw.dll'
 endef
