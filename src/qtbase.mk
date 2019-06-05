@@ -9,7 +9,7 @@ $(PKG)_CHECKSUM := fddfd8852ef7503febeed67b876d1425160869ae2b1ae8e10b3fb0fedc5fe
 $(PKG)_SUBDIR   := $(PKG)-everywhere-src-$($(PKG)_VERSION)
 $(PKG)_FILE     := $(PKG)-everywhere-src-$($(PKG)_VERSION).tar.xz
 $(PKG)_URL      := https://download.qt.io/official_releases/qt/5.12/$($(PKG)_VERSION)/submodules/$($(PKG)_FILE)
-$(PKG)_DEPS     := cc dbus fontconfig freetds libmysqlclient openssl postgresql sqlite icu4c mesa
+$(PKG)_DEPS     := cc dbus fontconfig freetype freetds libmysqlclient openssl pcre2 postgresql sqlite icu4c mesa
 $(PKG)_DEPS_$(BUILD) :=
 $(PKG)_TARGETS  := $(BUILD) $(MXE_TARGETS)
 
@@ -26,7 +26,7 @@ define $(PKG)_BUILD
     cd '$(1)' && \
         OPENSSL_LIBS="`'$(TARGET)-pkg-config' --libs-only-l openssl`" \
         PSQL_LIBS="-lpq -lsecur32 `'$(TARGET)-pkg-config' --libs-only-l openssl pthreads` -lws2_32" \
-        SYBASE_LIBS="-lsybdb `'$(TARGET)-pkg-config' --libs-only-l openssl` -lws2_32" \
+        SYBASE_LIBS="-lsybdb `'$(TARGET)-pkg-config' --libs-only-l openssl` -liconv -lws2_32" \
         PKG_CONFIG="${TARGET}-pkg-config" \
         PKG_CONFIG_SYSROOT_DIR="/" \
         PKG_CONFIG_LIBDIR="$(PREFIX)/$(TARGET)/lib/pkgconfig" \
@@ -43,10 +43,9 @@ define $(PKG)_BUILD
             -release \
             -static \
             -prefix '$(PREFIX)/$(TARGET)/qt5' \
-            -icu \
+            -no-icu \
             -opengl dynamic \
             -no-glib \
-            -no-iconv \
             -accessibility \
             -nomake examples \
             -nomake tests \
